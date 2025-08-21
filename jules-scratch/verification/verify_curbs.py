@@ -10,12 +10,12 @@ async def main():
         # Listen for all console events and print them
         page.on("console", lambda msg: print(f"BROWSER LOG: {msg.text}"))
 
-        # Get the absolute path to the HTML file
-        file_path = os.path.abspath('index.html')
+        # The URL for the Vite dev server
+        server_url = "http://localhost:5173/"
 
         try:
-            # Go to the local HTML file
-            await page.goto(f'file://{file_path}', timeout=10000)
+            # Go to the Vite dev server URL
+            await page.goto(server_url, timeout=15000)
 
             # Wait for the main canvas element to be visible
             canvas = page.locator('canvas')
@@ -29,7 +29,6 @@ async def main():
 
             # Use page.evaluate to stop the animation loop, move the camera, and force a render
             await page.evaluate('''() => {
-                // Stop the animation loop by replacing it with an empty function
                 if (typeof window.animate === 'function') {
                     window.animate = () => {};
                     console.log('Animation loop stopped.');
@@ -42,7 +41,6 @@ async def main():
                 controls.target.copy(targetPoint);
                 controls.update();
 
-                // Force an immediate render to the canvas
                 renderer.render(scene, camera);
                 console.log('Camera moved and scene re-rendered.');
             }''')
@@ -50,7 +48,7 @@ async def main():
             await page.wait_for_timeout(500)
 
             # Take a screenshot of the page
-            screenshot_path = 'jules-scratch/verification/curb_gaps_closeup.png'
+            screenshot_path = 'jules-scratch/verification/final_verification.png'
             await page.screenshot(path=screenshot_path)
             print(f"Screenshot saved to {screenshot_path}")
 
