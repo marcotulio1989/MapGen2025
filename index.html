@@ -217,29 +217,27 @@ function createRingRoad(matrix, gridSize, borderSize) {
 }
 
 function connectToRingRoad(matrix, gridSize, borderSize) {
-    const connectionProbability = 0.3;
-
     // Top boundary
     for (let c = borderSize; c < gridSize - borderSize; c++) {
-        if (matrix[borderSize][c] === 1 && Math.random() < connectionProbability) {
+        if (matrix[borderSize][c] === 1) {
             matrix[borderSize - 1][c] = 1;
         }
     }
     // Bottom boundary
     for (let c = borderSize; c < gridSize - borderSize; c++) {
-        if (matrix[gridSize - borderSize - 1][c] === 1 && Math.random() < connectionProbability) {
+        if (matrix[gridSize - borderSize - 1][c] === 1) {
             matrix[gridSize - borderSize][c] = 1;
         }
     }
     // Left boundary
     for (let r = borderSize; r < gridSize - borderSize; r++) {
-        if (matrix[r][borderSize] === 1 && Math.random() < connectionProbability) {
+        if (matrix[r][borderSize] === 1) {
             matrix[r][borderSize - 1] = 1;
         }
     }
     // Right boundary
     for (let r = borderSize; r < gridSize - borderSize; r++) {
-        if (matrix[r][gridSize - borderSize - 1] === 1 && Math.random() < connectionProbability) {
+        if (matrix[r][gridSize - borderSize - 1] === 1) {
             matrix[r][gridSize - borderSize] = 1;
         }
     }
