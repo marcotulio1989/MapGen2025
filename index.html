@@ -81,7 +81,7 @@
 
                     <div id="info-panel">
                             <h1>3D Street Generator</h1>
-                                    <p>Terrain blocks have C-shaped rounded corners, with matching curbs. Use the sliders to adjust block height and curb size.</p>
+                                    <p>This tool uses a Recursive Division algorithm to generate a procedural city layout. Start by defining a large area and then recursively dividing it into smaller blocks. Adjust the "Minimum Block Size" to control city density and use the "Split Bias" to influence the direction of the roads, creating either elongated avenues or wide districts.</p>
                                             
                                                     <div class="control-group">
                                                                 <label for="depth-slider">Block Height: <span id="depth-value">0.05</span></label>
@@ -98,20 +98,12 @@
                                                                         <input type="range" id="grid-size-slider" min="20" max="200" step="10" value="100">
                                                                     </div>
                                                                     <div class="control-group">
-                                                                        <label for="num-agents-slider">Number of Agents: <span id="num-agents-value">200</span></label>
-                                                                        <input type="range" id="num-agents-slider" min="50" max="500" step="10" value="200">
+                                                                        <label for="min-block-size-slider">Minimum Block Size: <span id="min-block-size-value">20</span></label>
+                                                                        <input type="range" id="min-block-size-slider" min="5" max="50" step="1" value="20">
                                                                     </div>
                                                                     <div class="control-group">
-                                                                        <label for="max-steps-slider">Agent Steps: <span id="max-steps-value">25</span></label>
-                                                                        <input type="range" id="max-steps-slider" min="5" max="50" step="1" value="25">
-                                                                    </div>
-                                                                    <div class="control-group">
-                                                                        <label for="turn-chance-slider">Turn Chance: <span id="turn-chance-value">0.40</span></label>
-                                                                        <input type="range" id="turn-chance-slider" min="0" max="1" step="0.05" value="0.4">
-                                                                    </div>
-                                                                    <div class="control-group">
-                                                                        <label for="branch-chance-slider">Branch Chance: <span id="branch-chance-value">0.15</span></label>
-                                                                        <input type="range" id="branch-chance-slider" min="0" max="1" step="0.05" value="0.15">
+                                                                        <label for="split-bias-slider">Split Bias: <span id="split-bias-value">0.50</span></label>
+                                                                        <input type="range" id="split-bias-slider" min="0" max="1" step="0.05" value="0.5">
                                                                     </div>
 
                                                                     <button id="regenerate-btn">Generate New City</button>
@@ -139,14 +131,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
                                                                                                                                                                                                                                                                                         const loadingOverlay = document.getElementById('loading-overlay');
                                                                                                                                                                                                                                                                                         const gridSizeSlider = document.getElementById('grid-size-slider');
                                                                                                                                                                                                                                                                                         const gridSizeValueSpan = document.getElementById('grid-size-value');
-                                                                                                                                                                                                                                                                                        const numAgentsSlider = document.getElementById('num-agents-slider');
-                                                                                                                                                                                                                                                                                        const numAgentsValueSpan = document.getElementById('num-agents-value');
-                                                                                                                                                                                                                                                                                        const maxStepsSlider = document.getElementById('max-steps-slider');
-                                                                                                                                                                                                                                                                                        const maxStepsValueSpan = document.getElementById('max-steps-value');
-                                                                                                                                                                                                                                                                                        const turnChanceSlider = document.getElementById('turn-chance-slider');
-                                                                                                                                                                                                                                                                                        const turnChanceValueSpan = document.getElementById('turn-chance-value');
-                                                                                                                                                                                                                                                                                        const branchChanceSlider = document.getElementById('branch-chance-slider');
-                                                                                                                                                                                                                                                                                        const branchChanceValueSpan = document.getElementById('branch-chance-value');
+                                                                                                                                                                                                                                                                                        const minBlockSizeSlider = document.getElementById('min-block-size-slider');
+                                                                                                                                                                                                                                                                                        const minBlockSizeValueSpan = document.getElementById('min-block-size-value');
+                                                                                                                                                                                                                                                                                        const splitBiasSlider = document.getElementById('split-bias-slider');
+                                                                                                                                                                                                                                                                                        const splitBiasValueSpan = document.getElementById('split-bias-value');
+
 
                                                                                                                                                                                                                                                                                                                 function init() {
                                                                                                                                                                                                                                                                                                                             scene = new THREE.Scene();
@@ -199,159 +188,59 @@ window.animate = animate;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     gridSizeSlider.addEventListener('input', () => {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     gridSizeValueSpan.textContent = gridSizeSlider.value;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    numAgentsSlider.addEventListener('input', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    numAgentsValueSpan.textContent = numAgentsSlider.value;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    minBlockSizeSlider.addEventListener('input', () => {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    minBlockSizeValueSpan.textContent = minBlockSizeSlider.value;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    maxStepsSlider.addEventListener('input', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    maxStepsValueSpan.textContent = maxStepsSlider.value;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    turnChanceSlider.addEventListener('input', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    turnChanceValueSpan.textContent = parseFloat(turnChanceSlider.value).toFixed(2);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    branchChanceSlider.addEventListener('input', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    branchChanceValueSpan.textContent = parseFloat(branchChanceSlider.value).toFixed(2);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    splitBiasSlider.addEventListener('input', () => {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    splitBiasValueSpan.textContent = parseFloat(splitBiasSlider.value).toFixed(2);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 });
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     animate();
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
 
-function createHierarchicalStreets(gridSize, params) {
-    const boundary = 10;
+function recursiveDivision(gridSize, params) {
     let matrix = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+    const { minBlockSize, splitBias } = params;
 
-    function createArterialRoad(startR, startC, startDir) {
-        let agent = {
-            pos: { r: startR, c: startC },
-            dir: startDir,
-            steps: 0,
-            active: true,
-        };
+    function divide(r, c, width, height) {
+        const isHorizontal = width < height;
+        const canDivideWidth = width >= minBlockSize * 2;
+        const canDivideHeight = height >= minBlockSize * 2;
 
-        while (agent.active) {
-            // Very low chance of turning to create mostly straight but slightly curved roads
-            if (Math.random() < 0.05) {
-                agent.dir = Math.random() < 0.5 ? (agent.dir + 1) % 4 : (agent.dir + 3) % 4;
+        if (!canDivideWidth && !canDivideHeight) {
+            return;
+        }
+
+        let splitHorizontal;
+        if (!canDivideWidth) {
+            splitHorizontal = true;
+        } else if (!canDivideHeight) {
+            splitHorizontal = false;
+        } else {
+            splitHorizontal = Math.random() < splitBias;
+        }
+
+
+        if (splitHorizontal) {
+            const splitRow = r + Math.floor(Math.random() * (height - minBlockSize * 2)) + minBlockSize;
+            for (let i = c; i < c + width; i++) {
+                matrix[splitRow][i] = 1;
             }
-
-            switch (agent.dir) {
-                case 0: agent.pos.r--; break; // North
-                case 1: agent.pos.c++; break; // East
-                case 2: agent.pos.r++; break; // South
-                case 3: agent.pos.c--; break; // West
+            divide(r, c, width, splitRow - r);
+            divide(splitRow + 1, c, width, height - (splitRow - r) - 1);
+        } else { // Vertical split
+            const splitCol = c + Math.floor(Math.random() * (width - minBlockSize * 2)) + minBlockSize;
+            for (let i = r; i < r + height; i++) {
+                matrix[i][splitCol] = 1;
             }
-
-            agent.steps++;
-
-            if (agent.pos.r < boundary || agent.pos.r >= gridSize - boundary || agent.pos.c < boundary || agent.pos.c >= gridSize - boundary) {
-                agent.active = false;
-                continue;
-            }
-
-            // Make arterial roads wider
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    const r = agent.pos.r + dr;
-                    const c = agent.pos.c + dc;
-                    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
-                        matrix[r][c] = 1;
-                    }
-                }
-            }
+            divide(r, c, splitCol - c, height);
+            divide(r, splitCol + 1, width - (splitCol - c) - 1, height);
         }
     }
 
-    // Create a few main arterial roads starting from the edges
-    const numMainRoads = params.numMainRoads;
-    for (let i = 0; i < numMainRoads; i++) {
-        const edge = Math.floor(Math.random() * 4);
-        let r, c, dir;
-        switch (edge) {
-            case 0: // Top edge
-                r = boundary;
-                c = Math.floor(Math.random() * (gridSize - 2 * boundary)) + boundary;
-                dir = 2; // South
-                break;
-            case 1: // Right edge
-                r = Math.floor(Math.random() * (gridSize - 2 * boundary)) + boundary;
-                c = gridSize - 1 - boundary;
-                dir = 3; // West
-                break;
-            case 2: // Bottom edge
-                r = gridSize - 1 - boundary;
-                c = Math.floor(Math.random() * (gridSize - 2 * boundary)) + boundary;
-                dir = 0; // North
-                break;
-            case 3: // Left edge
-                 r = Math.floor(Math.random() * (gridSize - 2 * boundary)) + boundary;
-                c = boundary;
-                dir = 1; // East
-                break;
-        }
-        createArterialRoad(r, c, dir);
-    }
-
-    // Spawn agents from arterial roads to create smaller streets
-    let agents = [];
-    for (let i = 0; i < params.numAgents; i++) {
-        const r = Math.floor(Math.random() * gridSize);
-        const c = Math.floor(Math.random() * gridSize);
-
-        if (matrix[r][c] === 1) {
-            agents.push({
-                pos: { r, c },
-                dir: Math.floor(Math.random() * 4),
-                steps: 0,
-                active: true,
-            });
-        }
-    }
-
-    let activeAgentsExist = true;
-    while (activeAgentsExist) {
-        activeAgentsExist = false;
-        for (let agent of agents) {
-            if (!agent.active) continue;
-            activeAgentsExist = true;
-
-            if (Math.random() < params.turnChance) {
-                agent.dir = Math.random() < 0.5 ? (agent.dir + 1) % 4 : (agent.dir + 3) % 4;
-            }
-
-            if (Math.random() < params.branchChance) {
-                agents.push({
-                    pos: { ...agent.pos },
-                    dir: Math.floor(Math.random() * 4),
-                    steps: 0,
-                    active: true,
-                });
-            }
-
-            switch (agent.dir) {
-                case 0: agent.pos.r--; break;
-                case 1: agent.pos.c++; break;
-                case 2: agent.pos.r++; break;
-                case 3: agent.pos.c--; break;
-            }
-
-            agent.steps++;
-
-            if (agent.pos.r < boundary || agent.pos.r >= gridSize - boundary || agent.pos.c < boundary || agent.pos.c >= gridSize - boundary || agent.steps >= params.maxSteps) {
-                agent.active = false;
-                continue;
-            }
-
-            if (matrix[agent.pos.r][agent.pos.c] === 1 && agent.steps < 2) {
-                agent.active = false;
-                continue;
-            }
-
-            matrix[agent.pos.r][agent.pos.c] = 1;
-        }
-    }
-
+    divide(0, 0, gridSize, gridSize);
     return matrix;
 }
-
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               function isStreet(r, c, gridSize, roadMatrix) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       return false;
@@ -551,13 +440,10 @@ function createHierarchicalStreets(gridSize, params) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       setTimeout(() => {
         const gridSize = parseInt(gridSizeSlider.value);
         const params = {
-            numMainRoads: Math.floor(Math.random() * 4) + 3,
-            numAgents: parseInt(numAgentsSlider.value),
-            maxSteps: parseInt(maxStepsSlider.value),
-            turnChance: parseFloat(turnChanceSlider.value),
-            branchChance: parseFloat(branchChanceSlider.value),
+            minBlockSize: parseInt(minBlockSizeSlider.value),
+            splitBias: parseFloat(splitBiasSlider.value),
         };
-        roadMatrix = createHierarchicalStreets(gridSize, params);
+        roadMatrix = recursiveDivision(gridSize, params);
         buildCityMeshes();
         loadingOverlay.style.display = 'none';
     }, 50);
