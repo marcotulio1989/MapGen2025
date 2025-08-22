@@ -198,8 +198,54 @@ window.animate = animate;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     animate();
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
 
-function recursiveDivision(gridSize, params) {
-    let matrix = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+function createRingRoad(matrix, gridSize, borderSize) {
+    const roadPosition = borderSize - 2;
+    if (roadPosition < 0) return;
+
+    for (let c = roadPosition; c < gridSize - roadPosition; c++) {
+        if(c >= 0 && c < gridSize) {
+            if(roadPosition >= 0 && roadPosition < gridSize) matrix[roadPosition][c] = 1;
+            if((gridSize - 1 - roadPosition) >= 0 && (gridSize - 1 - roadPosition) < gridSize) matrix[gridSize - 1 - roadPosition][c] = 1;
+        }
+    }
+    for (let r = roadPosition; r < gridSize - roadPosition; r++) {
+        if(r >= 0 && r < gridSize) {
+            if(roadPosition >= 0 && roadPosition < gridSize) matrix[r][roadPosition] = 1;
+            if((gridSize - 1 - roadPosition) >= 0 && (gridSize - 1 - roadPosition) < gridSize) matrix[r][gridSize - 1 - roadPosition] = 1;
+        }
+    }
+}
+
+function connectToRingRoad(matrix, gridSize, borderSize) {
+    const connectionProbability = 0.3;
+
+    // Top boundary
+    for (let c = borderSize; c < gridSize - borderSize; c++) {
+        if (matrix[borderSize][c] === 1 && Math.random() < connectionProbability) {
+            matrix[borderSize - 1][c] = 1;
+        }
+    }
+    // Bottom boundary
+    for (let c = borderSize; c < gridSize - borderSize; c++) {
+        if (matrix[gridSize - borderSize - 1][c] === 1 && Math.random() < connectionProbability) {
+            matrix[gridSize - borderSize][c] = 1;
+        }
+    }
+    // Left boundary
+    for (let r = borderSize; r < gridSize - borderSize; r++) {
+        if (matrix[r][borderSize] === 1 && Math.random() < connectionProbability) {
+            matrix[r][borderSize - 1] = 1;
+        }
+    }
+    // Right boundary
+    for (let r = borderSize; r < gridSize - borderSize; r++) {
+        if (matrix[r][gridSize - borderSize - 1] === 1 && Math.random() < connectionProbability) {
+            matrix[r][gridSize - borderSize] = 1;
+        }
+    }
+}
+
+function recursiveDivision(gridSize, params, matrix, borderSize) {
     const { minBlockSize, splitBias } = params;
 
     function divide(r, c, width, height) {
@@ -238,7 +284,7 @@ function recursiveDivision(gridSize, params) {
         }
     }
 
-    divide(0, 0, gridSize, gridSize);
+    divide(borderSize, borderSize, gridSize - borderSize * 2, gridSize - borderSize * 2);
     return matrix;
 }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               function isStreet(r, c, gridSize, roadMatrix) {
@@ -443,7 +489,11 @@ function recursiveDivision(gridSize, params) {
             minBlockSize: parseInt(minBlockSizeSlider.value),
             splitBias: parseFloat(splitBiasSlider.value),
         };
-        roadMatrix = recursiveDivision(gridSize, params);
+        const borderSize = 5;
+        roadMatrix = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+        createRingRoad(roadMatrix, gridSize, borderSize);
+        recursiveDivision(gridSize, params, roadMatrix, borderSize);
+        connectToRingRoad(roadMatrix, gridSize, borderSize);
         buildCityMeshes();
         loadingOverlay.style.display = 'none';
     }, 50);
